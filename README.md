@@ -1,7 +1,7 @@
 # FrameChanger
 
 ## Description
-FrameChanger is a desktop application that updates your desktop wallpaper with images from your favorite movies and TV shows. It's designed to provide a refreshing and personalized desktop experience, allowing you to enjoy a touch of cinema every time you look at your screen.
+FrameChanger is a desktop application that enables you to update your desktop wallpaper with images from your favorite movies and TV shows. It's designed to provide a refreshing and personalized desktop experience, allowing you to enjoy a touch of cinema every time you look at your screen.
 
 ## Key Features
 - **Personalized Collection**: Create a list of your favorite movies and TV shows to customize your desktop background.
