@@ -14,7 +14,7 @@ FrameChanger is a desktop application that enables you to update your desktop wa
 To use FrameChanger, simply download the latest release, and run `FrameChanger.exe`.
 
 ## First Time Users
-For first-time users, FrameChanger provides a welcoming message with details on how to use the application effectively. You'll learn how to add titles to your Favorites list, use the random wallpaper feature, and set up the auto wallpaper changer.
+For first-time users, FrameChanger provides a welcome message with details on how to use the application effectively. You'll learn how to add titles to your Favorites list, use the random wallpaper feature, and set up the auto wallpaper changer.
 
 ## Usage
 - Begin by adding movies and TV shows to your Favorites list via the user interface.
