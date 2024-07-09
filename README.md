@@ -1,32 +1,46 @@
 # FrameChanger
 
-## Description
-FrameChanger is a desktop application that enables you to update your desktop wallpaper with images from your favorite movies and TV shows. It's designed to provide a refreshing and personalized desktop experience, allowing you to enjoy a touch of cinema every time you look at your screen.
+FrameChanger is a desktop application that lets you update your wallpaper with images from your favorite movies and TV shows. It's designed to provide a refreshing and personalized desktop experience, allowing you to enjoy a touch of cinema every time you look at your screen.
 
-## Key Features
-- **Personalized Collection**: Create a list of your favorite movies and TV shows to customize your desktop background.
-- **Random Wallpaper Function**: Surprise yourself with a random selection from your favorites for a new backdrop.
-- **Auto Wallpaper Changer**: Automatically change your wallpaper at set intervals for a constantly refreshing desktop.
-- **High-Quality Images**: Wallpapers sourced from TMDB offer high resolution and visual appeal.
-- **Customizable Themes**: Choose from four unique themes to personalize the look and feel of the FrameChanger app to your liking.
+## Features
+
+- **Personalized Collection:** Add your favorite movies and TV shows to customize your desktop background.
+- **Random Wallpaper Function:** Get a new backdrop from your favorites randomly.
+- **Auto Wallpaper Changer:** Set intervals for automatic wallpaper changes.
+- **High-Quality Images:** Wallpapers are sourced from TMDB in high resolution.
+- **Customizable Themes:** Choose from four unique themes to change the app's look.
+- **Fetch Wallpapers from TMDB:** Easily access wallpapers from The Movie Database.
 
 ## Installation
-To use FrameChanger, simply download the latest release, and run `FrameChanger.exe`.
 
-## First Time Users
-For first-time users, FrameChanger provides a welcome message with details on how to use the application effectively. You'll learn how to add titles to your Favorites list, use the random wallpaper feature, and set up the auto wallpaper changer.
+To use FrameChanger, just download the latest release and run `FrameChanger.exe`.
+
+Or, you can install FrameChanger using pip:
+
+pip install framechanger
 
 ## Usage
-- Begin by adding movies and TV shows to your Favorites list via the user interface.
-- Customize wallpaper change intervals or enable the random wallpaper function in settings.
-- Enjoy a new and vibrant desktop background that reflects your taste in movies and TV shows.
-Please note: Closing the FrameChanger window will only minimize the application to the taskbar; to fully exit the application, please right-click and choose 'Exit' from the FrameChanger icon in the taskbar.
+
+Start by adding movies and TV shows to your Favorites list in the app. You can customize the wallpaper change intervals or enable the random wallpaper function in settings. Enjoy a new and vibrant desktop background that reflects your taste in movies and TV shows.
+
+To run FrameChanger from the command line:
+
+framechanger
+
+**Note:** Closing the FrameChanger window will minimize it to the taskbar. To fully exit, right-click the FrameChanger icon in the taskbar and select 'Exit'.
+
+## First Time Users
+
+When you first use FrameChanger, it will show a welcome message with details on how to use the app. You'll learn how to add titles to your Favorites list, use the random wallpaper feature, and set up the auto wallpaper changer.
 
 ## Feedback and Suggestions
-This is my very first software/app I've coded. Your feedback and suggestions are important. Feel free to reach out with your thoughts and ideas to improve FrameChanger.
+
+This is my first software/app I've coded. Your feedback and suggestions are important to me. Feel free to reach out with your thoughts and ideas to improve FrameChanger.
 
 ## License
-This project is protected under a proprietary license.
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contact
-For queries, feedback, or support, please contact me at akash.seam@gmail.com
+
+For any queries, feedback, or support, please contact me at akash.seam@gmail.com
