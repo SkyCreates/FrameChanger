@@ -3,10 +3,13 @@ name: Publish package
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+
+    environment: release
 
     permissions:
       contents: read
