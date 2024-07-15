@@ -1,46 +1,102 @@
 # FrameChanger
 
-FrameChanger is a desktop application that lets you update your wallpaper with images from your favorite movies and TV shows. It's designed to provide a refreshing and personalized desktop experience, allowing you to enjoy a touch of cinema every time you look at your screen.
+FrameChanger changes your desktop wallpaper to images from your favorite movies and TV shows using The Movie Database (TMDB) API.
 
 ## Features
 
-- **Personalized Collection:** Add your favorite movies and TV shows to customize your desktop background.
-- **Random Wallpaper Function:** Get a new backdrop from your favorites randomly.
-- **Auto Wallpaper Changer:** Set intervals for automatic wallpaper changes.
-- **High-Quality Images:** Wallpapers are sourced from TMDB in high resolution.
-- **Customizable Themes:** Choose from four unique themes to change the app's look.
-- **Fetch Wallpapers from TMDB:** Easily access wallpapers from The Movie Database.
+- Add favorite movies and TV shows
+- Change wallpaper randomly or to a specific favorite
+- Automatic wallpaper changer
+- Customizable themes
+- Search and filter favorites
+- Edit and delete favorites
+- System tray integration
+- Notifications
 
 ## Installation
 
-To use FrameChanger, just download the latest release and run `FrameChanger.exe`.
+### From PyPI
 
-Or, you can install FrameChanger using pip:
+Install with pip:
 
 pip install framechanger
 
+### From Source
+
+1. Clone the repository:
+git clone https://github.com/SkyCreates/FrameChanger.git
+cd FrameChanger
+
+2. Install dependencies:
+pip install -r requirements.txt
+
+3. Run the app:
+python app.py
+
+### Download as Release
+
+Get the latest release from the [Releases](https://github.com/SkyCreates/FrameChanger/releases) page on GitHub.
+
 ## Usage
 
-Start by adding movies and TV shows to your Favorites list in the app. You can customize the wallpaper change intervals or enable the random wallpaper function in settings. Enjoy a new and vibrant desktop background that reflects your taste in movies and TV shows.
+### Adding Favorites
 
-To run FrameChanger from the command line:
+- Enter a movie or TV show name and click "Add to Favorites" or press Enter.
+- Select "Movie" or "TV Show" using the radio buttons.
 
-framechanger
+### Changing Wallpaper
 
-**Note:** Closing the FrameChanger window will minimize it to the taskbar. To fully exit, right-click the FrameChanger icon in the taskbar and select 'Exit'.
+- Click "Change Wallpaper" to set a random wallpaper from your favorites.
+- Double-click a title in the favorites list to set a specific wallpaper.
 
-## First Time Users
+### Auto Wallpaper Changer
 
-When you first use FrameChanger, it will show a welcome message with details on how to use the app. You'll learn how to add titles to your Favorites list, use the random wallpaper feature, and set up the auto wallpaper changer.
+- Enable automatic wallpaper changes by clicking "Auto Wallpaper".
+- Set the interval for automatic changes.
 
-## Feedback and Suggestions
+### Theming
 
-This is my first software/app I've coded. Your feedback and suggestions are important to me. Feel free to reach out with your thoughts and ideas to improve FrameChanger.
+- Choose a theme from the dropdown menu.
+- Themes: Default, Dark, IMDB, TMDB, GreyRed.
+
+### Search and Filter
+
+- Use the search input to find movies or TV shows.
+- Filter by all, movies only, or TV shows only.
+
+### Edit and Delete Favorites
+
+- Select a title and click "Edit" to modify it.
+- Select a title and click "Delete" to remove it.
+- To delete all titles, press and hold "Delete".
+
+### System Tray Integration
+
+- Minimize to the system tray by clicking close.
+- Access features from the system tray icon:
+- Randomize: Change wallpaper randomly.
+- AutoWallpaper Changer Settings: Open auto changer settings.
+- Show App: Restore the main window.
+- Exit: Quit the app.
+
+### Notifications
+
+- Get notifications for wallpaper changes and other events.
+
+## Configuration
+
+- **Database:** Uses SQLite to store favorites.
+- **Settings:** Configuration settings in `settings.json`.
+
+## Credits
+
+- **Developer:** Akash Seam
+- **API:** The Movie Database (TMDB)
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-For any queries, feedback, or support, please contact me at akash.seam@gmail.com
+For questions or feedback, email me at akash.seam@gmail.com.
