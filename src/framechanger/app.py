@@ -1,22 +1,62 @@
 # app.py
 # This is the main application file for the FrameChanger app.
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, QRadioButton, QHBoxLayout, QMessageBox, QPushButton, QLabel, QListView, QComboBox, QSystemTrayIcon, QMenu, QAction, QDialog, QDialogButtonBox, QCheckBox, QSizePolicy, qApp
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QLineEdit,
+    QRadioButton,
+    QHBoxLayout,
+    QMessageBox,
+    QPushButton,
+    QLabel,
+    QListView,
+    QComboBox,
+    QSystemTrayIcon,
+    QMenu,
+    QAction,
+    QDialog,
+    QDialogButtonBox,
+    QCheckBox,
+    QSizePolicy,
+    qApp,
+    QFileDialog,
+)
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QFont, QIcon, QStandardItemModel, QStandardItem
-from framechanger.stylesheets import stylesheets   
+from PyQt5.QtGui import QFont, QIcon, QStandardItemModel, QStandardItem, QPixmap
+from framechanger.stylesheets import stylesheets
 import logging
 import sys
 import sqlite3
 import os
-from framechanger.wallpaper_changer import change_wallpaper, set_specific_wallpaper, load_settings, save_settings, initialize_database
+from framechanger.wallpaper_changer import (
+    change_wallpaper,
+    set_specific_wallpaper,
+    load_settings,
+    save_settings,
+    initialize_database,
+    download_random_image,
+    download_wallpaper,
+    set_wallpaper,
+    get_api_key,
+)
 
 # Constants for database and settings file
 DATABASE_NAME = 'titles.db'
 SETTINGS_FILE = 'auto_changer_settings.json'
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
+)
 
 class AutoChangerDialog(QDialog):
     """Dialog to configure the automatic wallpaper changer settings."""
@@ -196,6 +236,7 @@ class MainWindow(QMainWindow):
         self.add_button = QPushButton("Add to Favorites")
         self.add_button.setToolTip("Add the selected movie or TV show to your list of favorites.")
         self.add_button.setCursor(Qt.PointingHandCursor)
+        self.add_button.setAccessibleName("addButton")
         self.add_button.clicked.connect(self.add_title)
         layout.addWidget(self.add_button)
 
@@ -203,12 +244,14 @@ class MainWindow(QMainWindow):
         self.edit_button = QPushButton("Edit")
         self.edit_button.setToolTip("Edit the details of the selected title in the list.")
         self.edit_button.setCursor(Qt.PointingHandCursor)
+        self.edit_button.setAccessibleName("editButton")
         self.edit_button.clicked.connect(self.edit_title)
         edit_delete_layout.addWidget(self.edit_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.setToolTip("Delete the selected title from the list. Hold the button to delete all titles at once.")
         self.delete_button.setCursor(Qt.PointingHandCursor)
+        self.delete_button.setAccessibleName("deleteButton")
         self.delete_button.pressed.connect(self.start_delete_timer)
         self.delete_button.released.connect(self.stop_delete_timer)
         edit_delete_layout.addWidget(self.delete_button)
@@ -271,8 +314,21 @@ class MainWindow(QMainWindow):
         self.change_wallpaper_button = QPushButton("Change Wallpaper")
         self.change_wallpaper_button.setToolTip("Change your desktop wallpaper to a random image from your favorite movies and TV shows by clicking here.")
         self.change_wallpaper_button.setCursor(Qt.PointingHandCursor)
+        self.change_wallpaper_button.setAccessibleName("changeWallpaperButton")
         self.change_wallpaper_button.clicked.connect(self.change_wallpaper)
         layout.addWidget(self.change_wallpaper_button)
+
+        self.preview_button = QPushButton("Preview Wallpaper")
+        self.preview_button.setCursor(Qt.PointingHandCursor)
+        self.preview_button.setAccessibleName("previewButton")
+        self.preview_button.clicked.connect(self.preview_random_wallpaper)
+        layout.addWidget(self.preview_button)
+
+        self.local_button = QPushButton("Set Local Image")
+        self.local_button.setCursor(Qt.PointingHandCursor)
+        self.local_button.setAccessibleName("localImageButton")
+        self.local_button.clicked.connect(self.set_local_image)
+        layout.addWidget(self.local_button)
 
         auto_credits_layout = QHBoxLayout()
         self.auto_changer_button = QPushButton("Auto Wallpaper")
@@ -655,6 +711,44 @@ class MainWindow(QMainWindow):
             self.show_custom_notification("Wallpaper Changed", f"Wallpaper changed to {title_name}", 3000)
         else:
             self.show_custom_notification("Error", "Failed to change wallpaper.", 3000)
+
+    def show_preview_dialog(self, image_path):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Preview Wallpaper")
+        layout = QVBoxLayout()
+        label = QLabel()
+        pixmap = QPixmap(image_path)
+        label.setPixmap(pixmap.scaled(800, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        layout.addWidget(label)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.setLayout(layout)
+        return dialog.exec_() == QDialog.Accepted
+
+    def preview_random_wallpaper(self):
+        api_key = get_api_key()
+        if not api_key:
+            self.show_custom_notification("Error", "API key required", 3000)
+            return
+        image_path, title = download_random_image(api_key)
+        if not image_path:
+            self.show_custom_notification("Error", "Could not fetch wallpaper", 3000)
+            return
+        if self.show_preview_dialog(image_path):
+            if set_wallpaper(image_path):
+                self.show_custom_notification("Wallpaper Changed", f"Wallpaper changed to {title}", 3000)
+            else:
+                self.show_custom_notification("Error", "Failed to change wallpaper.", 3000)
+
+    def set_local_image(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Images (*.png *.jpg *.jpeg *.bmp)")
+        if path and self.show_preview_dialog(path):
+            if set_wallpaper(path):
+                self.show_custom_notification("Wallpaper Changed", "Wallpaper changed", 3000)
+            else:
+                self.show_custom_notification("Error", "Failed to change wallpaper.", 3000)
 
     def show_custom_notification(self, title, message, duration):
         """Show a custom notification."""

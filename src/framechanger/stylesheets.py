@@ -220,5 +220,32 @@ stylesheets = {
     QMessageBox QLabel {
         color: #F0F0F0;  /* Ensure text is visible */
     }
+    """,
+    "HighContrast": base_styles + """
+    QWidget {
+        background-color: #000000;
+        color: #FFFFFF;
+    }
+    QPushButton {
+        background-color: #FFFFFF;
+        color: #000000;
+    }
+    QLineEdit, QComboBox, QListView, QRadioButton, QCheckBox {
+        background-color: #000000;
+        color: #FFFFFF;
+        border: 2px solid #FFFFFF;
+    }
+    QComboBox::down-arrow {
+        color: #FFFFFF;
+    }
+    QRadioButton::indicator:checked, QCheckBox::indicator:checked {
+        background-color: #FFFFFF;
+    }
+    QMessageBox {
+        color: #000000;
+    }
+    QMessageBox QLabel {
+        color: #FFFFFF;
+    }
     """
 }
