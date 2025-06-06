@@ -41,6 +41,17 @@ Get the latest release from the [Releases](https://github.com/SkyCreates/FrameCh
 
 FrameChanger supports Windows, macOS and most Linux desktops. Wallpaper changes rely on system tools such as `gsettings` or `feh` on Linux.
 
+### Building an Executable
+
+If you want to distribute FrameChanger as a standalone Windows executable, build it with [PyInstaller](https://pyinstaller.org/) on a Windows machine:
+
+```bash
+pip install pyinstaller
+scripts/build_exe.sh
+```
+
+The `build_exe.sh` script invokes PyInstaller with the correct options and places the final `FrameChanger.exe` in the `dist` directory. Cross‑compiling from Linux is not supported, so run the script on Windows with Python installed.
+
 ## Usage
 
 ### Adding Favorites
