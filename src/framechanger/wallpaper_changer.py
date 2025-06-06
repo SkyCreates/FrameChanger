@@ -13,16 +13,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox, QInputDialog
 from PyQt5.QtCore import Qt
 import sys
 import logging
-
-LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler(),
-    ],
-)
+from .logging_utils import configure_logging
 
 API_KEY_ENV_VAR = "TMDB_API_KEY"
 
@@ -266,6 +257,7 @@ def initialize_database():
     conn.close()
 
 if __name__ == '__main__':
+    configure_logging()
     app = QApplication(sys.argv)
     api_key = get_api_key()
     if api_key:
