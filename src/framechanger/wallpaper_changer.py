@@ -7,14 +7,24 @@ import ctypes
 import os
 import sqlite3
 import json
+import platform
+import subprocess
 from PyQt5.QtWidgets import QApplication, QMessageBox, QInputDialog
 from PyQt5.QtCore import Qt
 import sys
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
+)
 
-TMDB_API_KEY = '6819c4980db75c79fc2dcc166da6926e'
+API_KEY_ENV_VAR = "TMDB_API_KEY"
 
 script_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
 image_dir = os.path.join(script_dir, 'MovieStillsWallpaperChanger')
@@ -24,19 +34,37 @@ if not os.path.exists(image_dir):
     os.mkdir(image_dir)
 
 def load_settings():
-    """Load settings from the settings file."""
+    """Load settings from the settings file and environment."""
+    settings = {}
     if os.path.exists(settings_file):
-        with open(settings_file, 'r') as file:
-            return json.load(file)
-    else:
-        default_settings = {"api_key": ""}
-        save_settings(default_settings)
-        return default_settings
+        with open(settings_file, "r") as file:
+            try:
+                settings = json.load(file)
+            except json.JSONDecodeError:
+                settings = {}
+    env_key = os.getenv(API_KEY_ENV_VAR)
+    if env_key:
+        settings["api_key"] = env_key
+    settings.setdefault("api_key", "")
+    return settings
 
 def save_settings(settings):
     """Save settings to the settings file."""
     with open(settings_file, 'w') as file:
         json.dump(settings, file)
+
+def get_api_key():
+    """Retrieve the TMDB API key from settings or prompt the user."""
+    settings = load_settings()
+    api_key = settings.get("api_key", "")
+    if not api_key:
+        api_key, ok = QInputDialog.getText(None, "TMDB API Key", "Enter your TMDB API Key:")
+        if not ok or not api_key:
+            QMessageBox.warning(None, "API Key Required", "A TMDB API key is required to fetch wallpapers.")
+            return None
+        settings["api_key"] = api_key
+        save_settings(settings)
+    return api_key
 
 def fetch_media_info(title_name, media_type, api_key):
     """Fetch media information from TMDB."""
@@ -98,30 +126,31 @@ def save_image(image_url, title_name):
         logging.error(f"Error saving image: {e}")
         return None
 
-def set_wallpaper(image_path):
-    """Set the wallpaper to the specified image path."""
-    try:
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, image_path, 3)
-        return True
-    except Exception as e:
-        logging.error(f"Error setting wallpaper: {e}")
-        return False
+def download_wallpaper(title_name, media_type, api_key):
+    """Download a wallpaper for the given title and return the file path."""
+    media_id = fetch_media_info(title_name, media_type, api_key)
+    if not media_id:
+        logging.error(f"No title found with the name: {title_name}")
+        return None
+    image_url = fetch_backdrop_image(media_id, media_type, api_key)
+    if not image_url:
+        logging.error(f"No backdrops found for the title: {title_name}")
+        return None
+    return save_image(image_url, title_name)
 
-def change_wallpaper(tray_icon):
-    """Change the desktop wallpaper to a random image from a movie or TV show in the database."""
+def download_random_image(api_key):
+    """Get a random title from the database and download its wallpaper."""
     conn = sqlite3.connect('titles.db')
     c = conn.cursor()
-
     c.execute("SELECT * FROM titles")
     rows = c.fetchall()
-
     if not rows:
         logging.error("No titles found in the database.")
-        return 1, ""
+        conn.close()
+        return None, ""
 
     settings = load_settings()
     last_title = settings.get('last_title', "")
-
     while True:
         title_name, media_type = random.choice(rows)
         if title_name != last_title or len(rows) == 1:
@@ -129,82 +158,67 @@ def change_wallpaper(tray_icon):
 
     settings['last_title'] = title_name
     save_settings(settings)
-
     conn.close()
 
+    image_path = download_wallpaper(title_name, media_type, api_key)
+    return image_path, title_name
+
+def set_wallpaper(image_path):
+    """Set the wallpaper on the current platform."""
+    system = platform.system()
     try:
-        api_key = TMDB_API_KEY
-
-        media_id = fetch_media_info(title_name, media_type, api_key)
-        if not media_id:
-            logging.error(f"No title found with the name: {title_name}")
-            return 1, ""
-
-        image_url = fetch_backdrop_image(media_id, media_type, api_key)
-        if not image_url:
-            logging.error(f"No backdrops found for the title: {title_name}")
-            return 1, ""
-
-        image_path = save_image(image_url, title_name)
-        if not image_path:
-            logging.error(f"Failed to save the image for the title: {title_name}")
-            return 1, ""
-
-        if set_wallpaper(image_path):
-            return 0, title_name
+        if system == "Windows":
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, image_path, 3)
+        elif system == "Darwin":
+            script = f'''osascript -e 'tell application "System Events" to set picture of every desktop to POSIX file "{image_path}"' '''
+            subprocess.run(script, shell=True, check=True)
+        elif system == "Linux":
+            try:
+                subprocess.run([
+                    "gsettings",
+                    "set",
+                    "org.gnome.desktop.background",
+                    "picture-uri",
+                    f"file://{image_path}",
+                ], check=True)
+            except Exception:
+                subprocess.run(["feh", "--bg-scale", image_path], check=True)
         else:
-            logging.error("Failed to set the wallpaper.")
-            return 1, ""
-
+            logging.error(f"Unsupported OS: {system}")
+            return False
+        return True
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logging.error(f"Error setting wallpaper: {e}")
+        return False
+
+def change_wallpaper(tray_icon):
+    """Download a random wallpaper and set it as the background."""
+    api_key = get_api_key()
+    if not api_key:
         return 1, ""
+    image_path, title_name = download_random_image(api_key)
+    if not image_path:
+        return 1, ""
+    if set_wallpaper(image_path):
+        return 0, title_name
+    logging.error("Failed to set the wallpaper.")
+    return 1, ""
 
 def set_specific_wallpaper(title_name, media_type, tray_icon):
     """Set the wallpaper to a specific movie or TV show."""
-    conn = sqlite3.connect('titles.db')
-    c = conn.cursor()
-
-    c.execute("SELECT * FROM titles")
-    rows = c.fetchall()
-
-    if not rows:
-        logging.error("No titles found in the database.")
+    api_key = get_api_key()
+    if not api_key:
         return 1, ""
-
-    settings = load_settings()
-    settings['last_title'] = title_name
-    save_settings(settings)
-
-    conn.close()
-
-    try:
-        api_key = TMDB_API_KEY
-
-        media_id = fetch_media_info(title_name, media_type, api_key)
-        if not media_id:
-            logging.error(f"No title found with the name: {title_name}")
-            return 1, ""
-
-        image_url = fetch_backdrop_image(media_id, media_type, api_key)
-        if not image_url:
-            logging.error(f"No backdrops found for the title: {title_name}")
-            return 1, ""
-
-        image_path = save_image(image_url, title_name)
-        if not image_path:
-            logging.error(f"Failed to save the image for the title: {title_name}")
-            return 1, ""
-
-        if set_wallpaper(image_path):
-            return 0, title_name
-        else:
-            logging.error("Failed to set the wallpaper.")
-            return 1, ""
-
-    except Exception as e:
-        logging.error(f"Error: {e}")
+    image_path = download_wallpaper(title_name, media_type, api_key)
+    if not image_path:
         return 1, ""
+    if set_wallpaper(image_path):
+        settings = load_settings()
+        settings['last_title'] = title_name
+        save_settings(settings)
+        return 0, title_name
+    logging.error("Failed to set the wallpaper.")
+    return 1, ""
 
 def initialize_database():
     """Initialize the database with a predefined list of movies and TV shows."""
@@ -253,6 +267,6 @@ def initialize_database():
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    settings = load_settings()
-    api_key = TMDB_API_KEY
-    set_specific_wallpaper("Example Title", "movie")
+    api_key = get_api_key()
+    if api_key:
+        set_specific_wallpaper("Example Title", "movie", None)
