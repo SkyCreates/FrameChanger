@@ -191,7 +191,7 @@ def set_wallpaper(image_path):
         logging.error(f"Error setting wallpaper: {e}")
         return False
 
-def change_wallpaper(tray_icon):
+def change_wallpaper():
     """Download a random wallpaper and set it as the background."""
     api_key = get_api_key()
     if not api_key:
@@ -204,7 +204,7 @@ def change_wallpaper(tray_icon):
     logging.error("Failed to set the wallpaper.")
     return 1, ""
 
-def set_specific_wallpaper(title_name, media_type, tray_icon):
+def set_specific_wallpaper(title_name, media_type):
     """Set the wallpaper to a specific movie or TV show."""
     api_key = get_api_key()
     if not api_key:
@@ -269,4 +269,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     api_key = get_api_key()
     if api_key:
-        set_specific_wallpaper("Example Title", "movie", None)
+        set_specific_wallpaper("Example Title", "movie")
