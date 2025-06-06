@@ -37,6 +37,10 @@ python app.py
 
 Get the latest release from the [Releases](https://github.com/SkyCreates/FrameChanger/releases) page on GitHub.
 
+### Platform Support
+
+FrameChanger supports Windows, macOS and most Linux desktops. Wallpaper changes rely on system tools such as `gsettings` or `feh` on Linux.
+
 ## Usage
 
 ### Adding Favorites
@@ -47,6 +51,8 @@ Get the latest release from the [Releases](https://github.com/SkyCreates/FrameCh
 ### Changing Wallpaper
 
 - Click "Change Wallpaper" to set a random wallpaper from your favorites.
+- Use "Preview Wallpaper" to see a random wallpaper before applying it.
+- "Set Local Image" lets you choose any image on your computer.
 - Double-click a title in the favorites list to set a specific wallpaper.
 
 ### Auto Wallpaper Changer
@@ -57,7 +63,7 @@ Get the latest release from the [Releases](https://github.com/SkyCreates/FrameCh
 ### Theming
 
 - Choose a theme from the dropdown menu.
-- Themes: Default, Dark, IMDB, TMDB, GreyRed.
+- Themes: Default, Dark, IMDB, TMDB, GreyRed, HighContrast.
 
 ### Search and Filter
 
@@ -86,7 +92,7 @@ Get the latest release from the [Releases](https://github.com/SkyCreates/FrameCh
 ## Configuration
 
 - **Database:** Uses SQLite to store favorites.
-- **Settings:** Configuration settings in `settings.json`.
+- **Settings:** Configuration stored in `settings.json`. Set your TMDB API key with the `TMDB_API_KEY` environment variable or enter it on first run.
 
 ## Credits
 
