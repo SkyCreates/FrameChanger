@@ -1,5 +1,11 @@
-# app.py
-# This is the main application file for the FrameChanger app.
+"""Main GUI application for FrameChanger.
+
+This module defines the Qt based interface used to manage favourite
+movies and TV shows and to trigger wallpaper changes.  Core classes
+include :class:`AutoChangerDialog`, :class:`EditDialog`,
+:class:`CustomNotification` and :class:`MainWindow`.  The ``run``
+function serves as the console entry point.
+"""
 
 from PyQt5.QtWidgets import (
     QApplication,

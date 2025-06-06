@@ -1,5 +1,12 @@
-# wallpaper_changer.py
-# This module handles the wallpaper changing functionality for the FrameChanger app.
+"""Utility functions for downloading and applying wallpapers.
+
+The module communicates with the TMDB API to fetch backdrops, saves
+them locally and sets them as the desktop background.  Key functions
+include ``load_settings``/``save_settings`` for configuration,
+``get_api_key`` for retrieving the TMDB key, the ``download_*`` helpers
+and :func:`change_wallpaper`.  ``initialize_database`` populates the
+initial list of movies and shows.
+"""
 
 import requests
 import random
