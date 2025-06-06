@@ -102,6 +102,10 @@ FrameChanger supports Windows, macOS and most Linux desktops. Wallpaper changes 
 ## License
 
 MIT License. See the [LICENSE](LICENSE) file for details.
+## Running Tests
+
+Install dependencies with `pip install -r requirements.txt` and run tests with `pytest`.
+
 
 ## Contact
 
