@@ -91,8 +91,8 @@ FrameChanger supports Windows, macOS and most Linux desktops. Wallpaper changes 
 
 ## Configuration
 
-- **Database:** Uses SQLite to store favorites.
-- **Settings:** Configuration stored in `settings.json`. Set your TMDB API key with the `TMDB_API_KEY` environment variable or enter it on first run.
+- **Database:** Uses SQLite to store favorites in `~/.framechanger/titles.db`.
+- **Settings:** Configuration stored in `~/.framechanger/settings.json`. Set your TMDB API key with the `TMDB_API_KEY` environment variable or enter it on first run.
 
 ## Credits
 

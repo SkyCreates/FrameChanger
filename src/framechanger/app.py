@@ -43,9 +43,10 @@ from framechanger.wallpaper_changer import (
     get_api_key,
 )
 
-# Constants for database and settings file
-DATABASE_NAME = 'titles.db'
-SETTINGS_FILE = 'auto_changer_settings.json'
+from framechanger.paths import DATABASE_PATH
+
+# Constants
+DATABASE_NAME = str(DATABASE_PATH)
 
 # Set up logging
 LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")

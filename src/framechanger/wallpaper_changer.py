@@ -14,6 +14,8 @@ from PyQt5.QtCore import Qt
 import sys
 import logging
 
+from .paths import APP_DIR, DATABASE_PATH, SETTINGS_PATH
+
 LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")
 logging.basicConfig(
     level=logging.INFO,
@@ -26,9 +28,8 @@ logging.basicConfig(
 
 API_KEY_ENV_VAR = "TMDB_API_KEY"
 
-script_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
-image_dir = os.path.join(script_dir, 'MovieStillsWallpaperChanger')
-settings_file = os.path.join(script_dir, 'settings.json')
+image_dir = os.path.join(APP_DIR, 'MovieStillsWallpaperChanger')
+settings_file = str(SETTINGS_PATH)
 
 if not os.path.exists(image_dir):
     os.mkdir(image_dir)
@@ -140,7 +141,7 @@ def download_wallpaper(title_name, media_type, api_key):
 
 def download_random_image(api_key):
     """Get a random title from the database and download its wallpaper."""
-    conn = sqlite3.connect('titles.db')
+    conn = sqlite3.connect(str(DATABASE_PATH))
     c = conn.cursor()
     c.execute("SELECT * FROM titles")
     rows = c.fetchall()
@@ -245,7 +246,7 @@ def initialize_database():
         ("Fleabag", "tv")
     ]
 
-    conn = sqlite3.connect('titles.db')
+    conn = sqlite3.connect(str(DATABASE_PATH))
     c = conn.cursor()
     
     # Create the titles table if it doesn't exist
