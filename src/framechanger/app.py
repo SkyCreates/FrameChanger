@@ -31,6 +31,7 @@ import logging
 import sys
 import sqlite3
 import os
+from framechanger.logging_utils import configure_logging
 from framechanger.wallpaper_changer import (
     change_wallpaper,
     set_specific_wallpaper,
@@ -47,16 +48,7 @@ from framechanger.wallpaper_changer import (
 DATABASE_NAME = 'titles.db'
 SETTINGS_FILE = 'auto_changer_settings.json'
 
-# Set up logging
-LOG_FILE = os.path.join(os.path.expanduser("~"), "framechanger.log")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler(),
-    ],
-)
+# Set up logging will be done when the application starts
 
 class AutoChangerDialog(QDialog):
     """Dialog to configure the automatic wallpaper changer settings."""
@@ -767,6 +759,7 @@ class MainWindow(QMainWindow):
 
 def run():
     """Run the application."""
+    configure_logging()
     app = QApplication([])
     main = MainWindow()
     main.show()
