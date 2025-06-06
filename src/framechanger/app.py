@@ -696,7 +696,7 @@ class MainWindow(QMainWindow):
 
     def change_wallpaper(self):
         """Change the wallpaper to a random image from the favorites list."""
-        result, title = change_wallpaper(self.tray_icon)
+        result, title = change_wallpaper()
         if result == 0:
             self.show_custom_notification("Wallpaper Changed", f"Wallpaper changed to {title}", 3000)
         else:
@@ -706,7 +706,7 @@ class MainWindow(QMainWindow):
         """Set a specific wallpaper based on the selected index."""
         selected_item = index.data()
         title, media_type = selected_item.split(' | ')
-        result, title_name = set_specific_wallpaper(title, media_type, self.tray_icon)
+        result, title_name = set_specific_wallpaper(title, media_type)
         if result == 0:
             self.show_custom_notification("Wallpaper Changed", f"Wallpaper changed to {title_name}", 3000)
         else:
