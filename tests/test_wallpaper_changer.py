@@ -5,13 +5,17 @@ import subprocess
 import types
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from framechanger import wallpaper_changer as wc
+from framechanger.config import config
+from framechanger import database
+from framechanger import tmdb_api
 
 
 def test_initialize_database(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    wc.initialize_database()
-    assert os.path.exists('titles.db')
-    conn = sqlite3.connect('titles.db')
+    monkeypatch.setattr(config, "get_app_data_dir", lambda: str(tmp_path))
+    database.initialize_database()
+    db_path = os.path.join(tmp_path, "titles.db")
+    assert os.path.exists(db_path)
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM titles')
     count = c.fetchone()[0]
@@ -21,8 +25,8 @@ def test_initialize_database(tmp_path, monkeypatch):
 
 def test_load_settings(tmp_path, monkeypatch):
     settings_file = tmp_path / 'settings.json'
-    monkeypatch.setattr(wc, 'settings_file', str(settings_file))
-    settings = wc.load_settings()
+    monkeypatch.setattr(config, 'get_settings_file', lambda: str(settings_file))
+    settings = config.load_settings()
     assert 'api_key' in settings
 
 
@@ -36,8 +40,8 @@ def test_fetch_media_info(monkeypatch):
             def json(self):
                 return {'results': [{'id': 42}]}
         return MockResponse()
-    monkeypatch.setattr(wc.requests, 'get', mock_get)
-    media_id = wc.fetch_media_info('The Matrix', 'movie', 'KEY')
+    monkeypatch.setattr(tmdb_api.requests, 'get', mock_get)
+    media_id = tmdb_api.fetch_media_info('The Matrix', 'movie', 'KEY')
     assert media_id == 42
     assert 'search/movie' in called['url']
 
@@ -54,8 +58,8 @@ def test_fetch_backdrop_image(monkeypatch):
                     ]
                 }
         return MockResponse()
-    monkeypatch.setattr(wc.requests, 'get', mock_get)
-    url = wc.fetch_backdrop_image(1, 'movie', 'KEY')
+    monkeypatch.setattr(tmdb_api.requests, 'get', mock_get)
+    url = tmdb_api.fetch_backdrop_image(1, 'movie', 'KEY')
     assert url == 'https://image.tmdb.org/t/p/original/img.jpg'
 
 

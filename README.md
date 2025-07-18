@@ -19,19 +19,27 @@ FrameChanger changes your desktop wallpaper to images from your favorite movies 
 
 Install with pip:
 
+```bash
 pip install framechanger
+```
 
 ### From Source
 
 1. Clone the repository:
-git clone https://github.com/SkyCreates/FrameChanger.git
-cd FrameChanger
+   ```bash
+   git clone https://github.com/SkyCreates/FrameChanger.git
+   cd FrameChanger
+   ```
 
 2. Install dependencies:
-pip install -r requirements.txt
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 3. Run the app:
-python app.py
+   ```bash
+   python -m framechanger.app
+   ```
 
 ### Download as Release
 
@@ -97,7 +105,7 @@ FrameChanger supports Windows, macOS and most Linux desktops. Wallpaper changes 
 ## Credits
 
 - **Developer:** Akash Seam
-- **API:** The Movie Database (TMDB)
+- **API:** This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 ## License
 

@@ -1,10 +1,10 @@
-"""Main GUI application for FrameChanger.
+"""
+Main GUI application for FrameChanger.
 
-This module defines the Qt based interface used to manage favourite
-movies and TV shows and to trigger wallpaper changes.  Core classes
-include :class:`AutoChangerDialog`, :class:`EditDialog`,
-:class:`CustomNotification` and :class:`MainWindow`.  The ``run``
-function serves as the console entry point.
+This module defines the Qt-based interface used to manage favorite
+movies and TV shows and to trigger wallpaper changes. The main class
+is :class:`MainWindow`, and the :func:`run` function serves as the
+console entry point.
 """
 
 from PyQt5.QtWidgets import (
@@ -23,9 +23,6 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon,
     QMenu,
     QAction,
-    QDialog,
-    QDialogButtonBox,
-    QCheckBox,
     QSizePolicy,
     qApp,
     QFileDialog,
@@ -41,147 +38,13 @@ from framechanger.logging_utils import configure_logging
 from framechanger.wallpaper_changer import (
     change_wallpaper,
     set_specific_wallpaper,
-    load_settings,
-    save_settings,
-    initialize_database,
-    download_random_image,
-    download_wallpaper,
     set_wallpaper,
+    download_random_image,
     get_api_key,
 )
-
-# Constants for database and settings file
-DATABASE_NAME = 'titles.db'
-SETTINGS_FILE = 'auto_changer_settings.json'
-
-# Set up logging will be done when the application starts
-
-class AutoChangerDialog(QDialog):
-    """Dialog to configure the automatic wallpaper changer settings."""
-    def __init__(self, auto_changer_enabled, auto_changer_interval):
-        super().__init__()
-
-        layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setAlignment(Qt.AlignCenter)
-
-        title_label = QLabel("<h2 style='color: #35495E; font-family: Segoe UI;'>AutoChanger Settings</h2>")
-        title_label.setAlignment(Qt.AlignLeft)
-        layout.addWidget(title_label)
-
-        self.auto_changer_checkbox = QCheckBox("Enable Automatic Changes")
-        self.auto_changer_checkbox.setStyleSheet("font-family: Segoe UI; font-size: 20px;")
-        self.auto_changer_checkbox.setToolTip("Check this box to let FrameChanger switch wallpapers automatically.")
-        self.auto_changer_checkbox.setChecked(auto_changer_enabled)
-        layout.addWidget(self.auto_changer_checkbox)
-
-        self.auto_changer_combobox = QComboBox()
-        self.auto_changer_combobox.setStyleSheet("font-family: Segoe UI; font-size: 16px;")
-        self.auto_changer_combobox.setToolTip("Pick how often you'd like FrameChanger to change your wallpaper.")
-        self.auto_changer_combobox.addItems(["1 Minute", "5 Minutes", "15 Minutes", "30 Minutes", "1 Hour", "3 Hours", "6 Hours", "12 Hours", "24 Hours"])
-        self.auto_changer_combobox.setCurrentIndex(auto_changer_interval)
-        layout.addWidget(self.auto_changer_combobox)
-
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttonBox.setStyleSheet("font-family: Segoe UI; font-size: 16px;")
-        buttonBox.accepted.connect(self.accept)
-        buttonBox.rejected.connect(self.reject)
-        layout.addWidget(buttonBox)
-
-        self.setLayout(layout)
-
-class EditDialog(QDialog):
-    """Dialog to edit the details of a title in the list."""
-    def __init__(self, title, media_type):
-        super().__init__()
-
-        layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setAlignment(Qt.AlignCenter)
-
-        title_label = QLabel("<h2 style='color: #35495E; font-family: Segoe UI;'>Edit Title</h2>")
-        title_label.setAlignment(Qt.AlignLeft)
-        layout.addWidget(title_label)
-
-        self.title_input = QLineEdit()
-        self.title_input.setText(title)
-        self.title_input.setStyleSheet("font-family: Segoe UI; font-size: 16px;")
-        self.title_input.setPlaceholderText("Enter the movie or TV show title")
-        layout.addWidget(self.title_input)
-
-        self.media_type_input = QComboBox()
-        self.media_type_input.setStyleSheet("font-family: Segoe UI; font-size: 16px;")
-        self.media_type_input.addItems(["movie", "tv"])
-        self.media_type_input.setCurrentIndex(0 if media_type.lower() == "movie" else 1)
-        layout.addWidget(self.media_type_input)
-    
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttonBox.setStyleSheet("font-family: Segoe UI; font-size: 16px;")
-        buttonBox.accepted.connect(self.accept)
-        buttonBox.rejected.connect(self.reject)
-        layout.addWidget(buttonBox)
-
-        self.setLayout(layout)
-
-def show_welcome_message():
-    """Display a welcome message to the user when the app starts for the first time."""
-    settings = load_settings()
-    if not settings.get('welcome_shown', False):
-        welcome_dialog = QMessageBox()
-        welcome_dialog.setIcon(QMessageBox.Information)
-        welcome_dialog.setWindowTitle("Welcome to FrameChanger")
-
-        welcome_text = (
-            "<h2 style='color: #35495E; font-family: Segoe UI;'>Welcome to FrameChanger</h2>"
-            "<p style='font-size: 16px; font-family: Segoe UI;'>"
-            "FrameChanger helps you add wallpapers from your favorite movies and TV shows to your desktop. Here's how to use it:</p>"
-            "<ul style='font-size: 16px; list-style-type: disc; padding-left: 20px; font-family: Segoe UI;'>"
-            "<li><b>Add your favorite movies and TV shows</b> to your Favorites list.</li>"
-            "<li><b>Double-click</b> a title in your Favorites list to change your wallpaper to an image from that movie or TV show.</li>"
-            "<li><b>Change Wallpaper:</b> Randomly select a wallpaper from your Favorites list.</li>"
-            "<li><b>Auto Wallpaper Changer:</b> Switch wallpapers automatically at regular intervals.</li>"
-            "<li><b>To close the app</b>, right-click the FrameChanger icon in the taskbar and select 'Exit'.</li>"
-            "</ul>"
-            "<p style='font-size: 16px; font-family: Segoe UI;'>To get started, add some titles to your Favorites list and enjoy a new look for your desktop!</p>"
-            "<p style='font-size: 16px; font-family: Segoe UI;'>"
-            "Thank you for using FrameChanger! If you have any questions or feedback, please let us know.</p>"
-        )
-
-        welcome_dialog.setTextFormat(Qt.RichText)
-        welcome_dialog.setText(welcome_text)
-        welcome_dialog.setStandardButtons(QMessageBox.Ok)
-        welcome_dialog.setMinimumSize(400, 300)
-        welcome_dialog.exec_()
-
-        settings['welcome_shown'] = True
-        save_settings(settings)
-
-class CustomNotification(QDialog):
-    """Class for displaying custom notifications."""
-    def __init__(self, title, message, duration=500, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.X11BypassWindowManagerHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setFixedSize(500, 150)
-
-        layout = QVBoxLayout()
-        label = QLabel(message)
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
-        self.setLayout(layout)
-
-        # Set the timer to close the dialog
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.close)
-        self.timer.start(duration)
-
-        # Move the dialog to the bottom right corner of the screen
-        screen_geometry = QApplication.primaryScreen().availableGeometry()
-        self.move(screen_geometry.width() - self.width() - 25, screen_geometry.height() - self.height() - 25)
+from framechanger.database import initialize_database
+from framechanger.config.config import load_settings, save_settings, get_database_file
+from framechanger.dialogs import AutoChangerDialog, EditDialog, CustomNotification, show_welcome_message
 
 class MainWindow(QMainWindow):
     """The main window of the FrameChanger application."""
@@ -360,7 +223,7 @@ class MainWindow(QMainWindow):
 
         self.show_titles()
 
-        show_welcome_message()
+        show_welcome_message(load_settings, save_settings)
 
         # System tray setup
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -411,7 +274,7 @@ class MainWindow(QMainWindow):
             "<p align='left'>I created FrameChanger because I often get bored with my desktop wallpaper and didn't want to keep changing it manually. "
             "I also enjoy movies and TV shows and thought it would be cool to have wallpapers from my favorite titles. This app randomly selects wallpapers "
             "from a list of my favorite movies and TV shows. I hope it helps others who feel the same way.</p>"
-            "<p align='left'>The app uses The Movie Database (TMDB) API to fetch wallpapers. All images are copyrighted by their respective owners.</p>"
+            "<p align='left'>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>"
             "<p align='left'>Built with Python, PyQt, and SQLite.</p>"
             "<p align='left'><b>Questions or Feedback:</b> For any questions or feedback, please email me at akash.seam@gmail.com.</p>"
             "<p align='left'><b>Disclaimer:</b> This software is provided 'as is'. The developer is not responsible for any data loss or damage.</p>"
@@ -448,7 +311,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            with sqlite3.connect(DATABASE_NAME) as conn:
+            with sqlite3.connect(get_database_file()) as conn:
                 c = conn.cursor()
                 c.execute("INSERT OR IGNORE INTO titles VALUES (?, ?)", (title, media_type.lower()))
 
@@ -458,7 +321,7 @@ class MainWindow(QMainWindow):
                 conn.commit()
 
         except sqlite3.Error as e:
-            self.display(f'Database Error: {e}')
+            self.display(f'Database Error: Could not add title to the database.\n{e}')
 
         self.show_titles()
 
@@ -483,7 +346,7 @@ class MainWindow(QMainWindow):
 
             if title != new_title or media_type.lower() != new_media_type:
                 try:
-                    with sqlite3.connect(DATABASE_NAME) as conn:
+                    with sqlite3.connect(get_database_file()) as conn:
                         c = conn.cursor()
 
                         # Check for duplicate entry
@@ -493,12 +356,12 @@ class MainWindow(QMainWindow):
                             return
 
                         # Perform the update
-                        c.execute("UPDATE titles SET name=?, media_type=? WHERE name=? AND media_type=?", 
+                        c.execute("UPDATE titles SET name=?, media_type=? WHERE name=? AND media_type=?",
                                 (new_title, new_media_type, title, media_type.lower()))
                         conn.commit()
 
                 except sqlite3.Error as e:
-                    self.display(f'Database Error: {e}')
+                    self.display(f'Database Error: Could not edit the title.\n{e}')
 
                 self.show_titles()
 
@@ -522,13 +385,13 @@ class MainWindow(QMainWindow):
                 title, media_type = selected_item.split(' | ')
 
                 try:
-                    with sqlite3.connect(DATABASE_NAME) as conn:
+                    with sqlite3.connect(get_database_file()) as conn:
                         c = conn.cursor()
                         c.execute("DELETE FROM titles WHERE name=? AND media_type=?", (title, media_type.lower()))
                         conn.commit()
 
                 except sqlite3.Error as e:
-                    self.display(f'Database Error: {e}')
+                    self.display(f'Database Error: Could not delete the title.\n{e}')
 
             self.show_titles()
 
@@ -537,13 +400,13 @@ class MainWindow(QMainWindow):
         reply = QMessageBox.question(self, 'Delete All Titles', 'Are you sure you want to delete all titles? This action cannot be undone.', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             try:
-                conn = sqlite3.connect(DATABASE_NAME)
+                conn = sqlite3.connect(get_database_file())
                 c = conn.cursor()
                 c.execute("DELETE FROM titles")
                 conn.commit()
                 conn.close()
             except sqlite3.Error as e:
-                self.display(f'Database Error: {e}')
+                self.display(f'Database Error: Could not delete all titles.\n{e}')
 
             self.show_titles()
 
@@ -551,7 +414,7 @@ class MainWindow(QMainWindow):
         """Show the titles in the list view."""
         model = QStandardItemModel(self.listView)
         try:
-            conn = sqlite3.connect(DATABASE_NAME)
+            conn = sqlite3.connect(get_database_file())
             c = conn.cursor()
 
             filter_text = self.filter_input.currentText()
@@ -587,7 +450,7 @@ class MainWindow(QMainWindow):
             self.count_label.setText(f"Number of titles: {len(rows)}")
             conn.close()
         except sqlite3.Error as e:
-            self.display(f'Database Error: {e}')
+            self.display(f'Database Error: Could not retrieve titles from the database.\n{e}')
 
     def load_and_apply_settings(self):
         """Load settings and apply auto changer settings if enabled."""
@@ -599,7 +462,7 @@ class MainWindow(QMainWindow):
 
         self.load_auto_changer_settings()
         self.apply_auto_changer_settings()
-    
+
     def apply_auto_changer_settings(self):
         """Apply auto changer settings."""
         if self.auto_changer_enabled:

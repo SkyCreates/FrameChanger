@@ -1,11 +1,8 @@
-"""Utility functions for downloading and applying wallpapers.
+"""
+Utility functions for downloading and applying wallpapers.
 
-The module communicates with the TMDB API to fetch backdrops, saves
-them locally and sets them as the desktop background.  Key functions
-include ``load_settings``/``save_settings`` for configuration,
-``get_api_key`` for retrieving the TMDB key, the ``download_*`` helpers
-and :func:`change_wallpaper`.  ``initialize_database`` populates the
-initial list of movies and shows.
+This module provides functions for downloading wallpapers from TMDB,
+saving them locally, and setting them as the desktop background.
 """
 
 import requests
@@ -13,43 +10,15 @@ import random
 import ctypes
 import os
 import sqlite3
-import json
 import platform
 import subprocess
 from PyQt5.QtWidgets import QApplication, QMessageBox, QInputDialog
-from PyQt5.QtCore import Qt
 import sys
 import logging
-from .logging_utils import configure_logging
+from .config.config import load_settings, save_settings, get_database_file, get_app_data_dir
+from .tmdb_api import fetch_media_info, fetch_backdrop_image
 
 API_KEY_ENV_VAR = "TMDB_API_KEY"
-
-script_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
-image_dir = os.path.join(script_dir, 'MovieStillsWallpaperChanger')
-settings_file = os.path.join(script_dir, 'settings.json')
-
-if not os.path.exists(image_dir):
-    os.mkdir(image_dir)
-
-def load_settings():
-    """Load settings from the settings file and environment."""
-    settings = {}
-    if os.path.exists(settings_file):
-        with open(settings_file, "r") as file:
-            try:
-                settings = json.load(file)
-            except json.JSONDecodeError:
-                settings = {}
-    env_key = os.getenv(API_KEY_ENV_VAR)
-    if env_key:
-        settings["api_key"] = env_key
-    settings.setdefault("api_key", "")
-    return settings
-
-def save_settings(settings):
-    """Save settings to the settings file."""
-    with open(settings_file, 'w') as file:
-        json.dump(settings, file)
 
 def get_api_key():
     """Retrieve the TMDB API key from settings or prompt the user."""
@@ -64,57 +33,11 @@ def get_api_key():
         save_settings(settings)
     return api_key
 
-def fetch_media_info(title_name, media_type, api_key):
-    """Fetch media information from TMDB."""
-    media_type = media_type.lower()
-    search_url = f'https://api.themoviedb.org/3/search/{media_type}?api_key={api_key}&query={title_name}'
-    logging.debug(f'Search URL: {search_url}')
-    
-    try:
-        response = requests.get(search_url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Request Exception: {e}")
-        return None
-
-    results = response.json().get('results', [])
-    logging.debug(f'Search Results: {results}')
-    
-    if results:
-        best_match = results[0]
-        return best_match['id']
-    else:
-        logging.error(f"No results found for: {title_name} ({media_type})")
-        return None
-
-def fetch_backdrop_image(media_id, media_type, api_key):
-    """Fetch the backdrop image from TMDB."""
-    media_type = media_type.lower()
-    images_url = f'https://api.themoviedb.org/3/{media_type}/{media_id}/images?api_key={api_key}'
-    logging.debug(f'Images URL: {images_url}')
-    
-    try:
-        response = requests.get(images_url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Request Exception: {e}")
-        return None
-
-    backdrops = [
-        img for img in response.json().get('backdrops', [])
-        if img['iso_639_1'] is None and round(img['width'] / img['height'], 2) == 1.78
-    ]
-    logging.debug(f'Backdrops: {backdrops}')
-    
-    if backdrops:
-        backdrop = random.choice(backdrops)
-        return f"https://image.tmdb.org/t/p/original{backdrop['file_path']}"
-    else:
-        logging.error(f"No suitable backdrops found for media ID: {media_id}")
-        return None
-
 def save_image(image_url, title_name):
     """Save the image to the local directory."""
+    image_dir = os.path.join(get_app_data_dir(), 'wallpapers')
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
     try:
         image_content = requests.get(image_url).content
         with open(os.path.join(image_dir, f'{title_name}.jpg'), 'wb') as f:
@@ -138,7 +61,8 @@ def download_wallpaper(title_name, media_type, api_key):
 
 def download_random_image(api_key):
     """Get a random title from the database and download its wallpaper."""
-    conn = sqlite3.connect('titles.db')
+    db_file = get_database_file()
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
     c.execute("SELECT * FROM titles")
     rows = c.fetchall()
@@ -217,55 +141,3 @@ def set_specific_wallpaper(title_name, media_type):
         return 0, title_name
     logging.error("Failed to set the wallpaper.")
     return 1, ""
-
-def initialize_database():
-    """Initialize the database with a predefined list of movies and TV shows."""
-    titles = [
-        ("The Grand Budapest Hotel", "movie"),
-        ("The Truman Show", "movie"),
-        ("500 Days of Summer", "movie"),
-        ("Blade Runner 2049", "movie"),
-        ("Inception", "movie"),
-        ("Spirited Away", "movie"),
-        ("Her", "movie"),
-        ("Whiplash", "movie"),
-        ("Mad Max Fury Road", "movie"),
-        ("Inglourious Basterds", "movie"),
-        ("Fargo", "tv"),
-        ("True Detective", "tv"),
-        ("The Crown", "tv"),
-        ("The Handmaid's Tale", "tv"),
-        ("Peaky Blinders", "tv"),
-        ("Dark", "tv"),
-        ("Mindhunter", "tv"),
-        ("The Expanse", "tv"),
-        ("Better Call Saul", "tv"),
-        ("Fleabag", "tv")
-    ]
-
-    conn = sqlite3.connect('titles.db')
-    c = conn.cursor()
-    
-    # Create the titles table if it doesn't exist
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS titles (
-            name TEXT NOT NULL,
-            media_type TEXT NOT NULL,
-            UNIQUE(name, media_type)
-        )
-    ''')
-
-    # Insert the predefined titles into the table
-    c.executemany('''
-        INSERT OR IGNORE INTO titles (name, media_type) VALUES (?, ?)
-    ''', titles)
-    
-    conn.commit()
-    conn.close()
-
-if __name__ == '__main__':
-    configure_logging()
-    app = QApplication(sys.argv)
-    api_key = get_api_key()
-    if api_key:
-        set_specific_wallpaper("Example Title", "movie")
