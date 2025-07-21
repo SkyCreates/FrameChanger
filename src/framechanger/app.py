@@ -34,7 +34,7 @@ import logging
 import sys
 import sqlite3
 import os
-from framechanger.logging_utils import configure_logging
+from framechanger.config.logging_utils import configure_logging
 from framechanger.wallpaper_changer import (
     change_wallpaper,
     set_specific_wallpaper,
